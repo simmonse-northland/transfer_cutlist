@@ -1,70 +1,54 @@
 import tkinter as tk
 import os
 
-new_orders=r'H:\test_data\unprocessed'
-processed_orders=r'H:\test_data\processed'
+# Define the source directories for new and processed orders
+NEW_ORDERS_DIR = r'H:\test_data\unprocessed'
+PROCESSED_ORDERS_DIR = r'H:\test_data\processed'
 
-def get_cutlist(source_dir):
-    cutlist = []
-    for filename in os.listdir(source_dir):
-        if filename.endswith('.csv'):
-            basename = os.path.basename(filename)
-            cutlist.append(basename)
-            cutlist = sorted(cutlist, reverse=True)
-    return cutlist[:10]
+# Define the maximum number of cutlists to display
+MAX_CUTLISTS = 10
 
+# Define the padding for the grid layout
+GRID_PADDING = {'padx': 10, 'pady': 5}
 
+def get_cutlists(source_dir):
+    """
+    Get the cutlists in the given source directory, sorted by modification time.
+    """
+    cutlists = [os.path.join(source_dir, filename) for filename in os.listdir(source_dir) if filename.endswith('.csv')]
+    cutlists.sort(key=os.path.getmtime, reverse=True)
+    return cutlists[:MAX_CUTLISTS]
 
-
-def draw_buttons(cutlist, column):
-    for row, item in enumerate(cutlist):
-        if item in new_orders_cutlist:
-            button = tk.Button(root, text=item, command=lambda item=item: button_click(item))
-        else:
-            button = tk.Button(root, text=item)
-        button.grid(row=row+1, column=column, sticky="w", padx=10, pady=5)
-
-def draw_headers():
-    new_orders_label = tk.Label(root, text="New Orders")
-    new_orders_label.grid(row=0, column=0, padx=10, pady=5)
-
-    processed_orders_label = tk.Label(root, text="Processed Orders")
-    processed_orders_label.grid(row=0, column=1, padx=10, pady=5)
-
-def button_click(item):
-    global new_orders_cutlist, processed_orders_cutlist
-    # Determine the source and destination directories based on the button clicked
-    if item in new_orders_cutlist:
-        source_dir = new_orders
-        new_orders_cutlist = get_cutlist(source_dir)
-    else: 
-        source_dir = processed_orders
-        processed_orders_cutlist = get_cutlist(source_dir)
-        cutlist = processed_orders_cutlist
-
-    # Delete the file from the source directory
-    filename = os.path.join(source_dir, item)
+def delete_cutlist(filename):
+    """
+    Delete the cutlist file with the given filename.
+    """
     os.remove(filename)
 
-    # Redraw the buttons
+def redraw_buttons():
+    """
+    Redraw the buttons for the new and processed cutlists.
+    """
     for button in root.grid_slaves():
         button.destroy()
-    draw_headers()
-    draw_buttons(new_orders_cutlist, 0)
-    draw_buttons(processed_orders_cutlist, 1)
+
+    new_cutlists = get_cutlists(NEW_ORDERS_DIR)
+    processed_cutlists = get_cutlists(PROCESSED_ORDERS_DIR)
+
+    for column, (cutlists, label_text) in enumerate(zip([new_cutlists, processed_cutlists], ['New Orders', 'Processed Orders'])):
+        label = tk.Label(root, text=label_text)
+        label.grid(row=0, column=column, **GRID_PADDING)
+
+        for row, cutlist_filename in enumerate(cutlists, 1):
+            cutlist_name = os.path.basename(cutlist_filename)
+            button = tk.Button(root, text=cutlist_name, command=lambda filename=cutlist_filename: delete_cutlist(filename))
+            button.grid(row=row, column=column, sticky="w", **GRID_PADDING)
+
+# Create the root window
 root = tk.Tk()
 
-new_orders_cutlist = get_cutlist(new_orders)
+# Draw the initial buttons
+redraw_buttons()
 
-processed_orders_cutlist = get_cutlist(processed_orders)
-
-new_orders_label = tk.Label(root, text="New Orders")
-new_orders_label.grid(row=0, column=0, padx=10, pady=5)
-
-processed_orders_label = tk.Label(root, text="Processed Orders")
-processed_orders_label.grid(row=0, column=1, padx=10, pady=5)
-
-draw_buttons(new_orders_cutlist, 0)
-draw_buttons(processed_orders_cutlist, 1)
-
+# Start the event loop
 root.mainloop()
