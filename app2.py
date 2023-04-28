@@ -38,7 +38,8 @@ def button_click(item):
     source_filename = os.path.join(new_orders, item)
     destination_filename = os.path.join(processed_orders, item)
     shutil.move(source_filename, destination_filename)
-    # subprocess.run(['start', filename])
+    os.utime(destination_filename, (time.time(), time.time()))
+    os.startfile(destination_filename)
 
     # Redraw the buttons
     for button in root.grid_slaves():
