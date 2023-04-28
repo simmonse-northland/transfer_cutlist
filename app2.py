@@ -1,5 +1,8 @@
 import tkinter as tk
 import os
+import subprocess
+import time
+import shutil
 
 new_orders=r'H:\test_data\unprocessed'
 processed_orders=r'H:\test_data\processed'
@@ -32,8 +35,10 @@ def draw_headers():
 def button_click(item):
     global new_orders_cutlist, processed_orders_cutlist
     # Delete the file from the source directory
-    filename = os.path.join(new_orders, item)
-    os.remove(filename)
+    source_filename = os.path.join(new_orders, item)
+    destination_filename = os.path.join(processed_orders, item)
+    shutil.move(source_filename, destination_filename)
+    # subprocess.run(['start', filename])
 
     # Redraw the buttons
     for button in root.grid_slaves():
